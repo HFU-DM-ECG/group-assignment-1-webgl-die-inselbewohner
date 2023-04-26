@@ -1,0 +1,25 @@
+{
+  "name": "group-assignment-1-webgl-die-inselbewohner",
+  "version": "1.0.0",
+  "description": "[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/1Zvp0ubu)\r # Group assignment 01 - WebGL demo",
+  "main": "scene.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HFU-DM-ECG/group-assignment-1-webgl-die-inselbewohner.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HFU-DM-ECG/group-assignment-1-webgl-die-inselbewohner/issues"
+  },
+  "homepage": "https://github.com/HFU-DM-ECG/group-assignment-1-webgl-die-inselbewohner#readme",
+  "dependencies": {
+    "three": "^0.151.3"
+  },
+  "devDependencies": {
+    "vite": "^4.3.2"
+  }
+}
