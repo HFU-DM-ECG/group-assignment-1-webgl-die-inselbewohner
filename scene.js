@@ -2,14 +2,8 @@ import * as THREE from "three";
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-const controls = new OrbitControls(camera, renderer.domElement);
+let scene, camera, renderer, controls;
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2(0, 0);
@@ -21,56 +15,83 @@ let leftArrowPressed = false;
 let upArrowPressed = false;
 let downArrowPressed = false;
 
-camera.position.z = 5;
-
 const gltfLoader = new GLTFLoader();
 let arm;
-gltfLoader.load("arm.glb", (glb) => {
-	arm = glb.scene;
-	arm.scale.set(4, 4, 4);
-	arm.position.set(0, 0, 0);
-	arm.material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-	scene.add(arm);
-	console.log(arm);
 
-	animate();
-});
 
-const ambientLight = new THREE.AmbientLight(0x606060, 2);
-scene.add(ambientLight);
+function initialize() {
+	//Scene
+	scene = new THREE.Scene();
+	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+	camera.position.z = 5;
 
-const pointLight = new THREE.PointLight(0x404040, 2, 50);
-pointLight.position.setZ(3);
-scene.add(pointLight);
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	document.body.appendChild(renderer.domElement);
 
-function animate(time) {
+	//Light
+	const ambientLight = new THREE.AmbientLight(0x606060, 2);
+	scene.add(ambientLight);
+	
+	const pointLight = new THREE.PointLight(0x404040, 2, 50);
+	pointLight.position.setZ(3);
+	scene.add(pointLight);
+
+	//Orbit controls
+	controls = new OrbitControls(camera, renderer.domElement);
+
+	//Load arm
+	gltfLoader.load("arm.glb", (glb) => {
+		arm = glb.scene;
+		arm.scale.set(4, 4, 4);
+		arm.position.set(0, 0, 0);
+		scene.add(arm);
+	
+		onInitialized();
+	});
+
+}
+
+function onInitialized() {
+	//Add events
+	window.addEventListener('click', onPointerDown);
+	window.addEventListener('keydown', onKeyDown);
+	window.addEventListener('keyup', onKeyUp);
+
+	//Start update
 	requestAnimationFrame(animate);
-
-	let deltaTime = time - prevTime;
-
-	if (rightArrowPressed && previouslySelected.name != "Alpha_Joints") {
-		previouslySelected.rotation.z -= deltaTime * 0.005;
-
-	} else if (leftArrowPressed && previouslySelected.name != "Alpha_Joints") {
-		previouslySelected.rotation.z += deltaTime * 0.005;
-	}
-	else if (upArrowPressed && previouslySelected.name != "Alpha_Joints") {
-		previouslySelected.rotation.x += deltaTime * 0.005;
-	}
-	else if (downArrowPressed && previouslySelected.name != "Alpha_Joints") {
-		previouslySelected.rotation.x -= deltaTime * 0.005;
-	}
-
-	controls.update();
-
-	renderer.render(scene, camera);
-
-	prevTime = time;
 }
 
 
-window.addEventListener('click', onPointerDown);
+function animate(time) {
+	requestAnimationFrame(animate);
+	let deltaTime = time - prevTime;
 
+	update(time, deltaTime);
+
+	controls.update();
+	renderer.render(scene, camera);
+	prevTime = time;
+}
+
+function update(time, deltaTime) {
+
+	if (previouslySelected == null) { return; }
+	if (previouslySelected.name == "Alpha_Joints") { return; }
+	
+	if (rightArrowPressed) {
+		previouslySelected.rotation.z -= deltaTime * 0.005;
+
+	} else if (leftArrowPressed) {
+		previouslySelected.rotation.z += deltaTime * 0.005;
+	}
+	else if (upArrowPressed) {
+		previouslySelected.rotation.x += deltaTime * 0.005;
+	}
+	else if (downArrowPressed) {
+		previouslySelected.rotation.x -= deltaTime * 0.005;
+	}
+}
 
 
 function onPointerDown(event) {
@@ -103,8 +124,8 @@ function onPointerDown(event) {
 		previouslySelected = selected;
 	}
 }
-window.addEventListener('keydown', function (event) {
 
+function onKeyDown(event) {
 	switch (event.key) {
 		case 'ArrowRight':
 			rightArrowPressed = true;
@@ -119,10 +140,9 @@ window.addEventListener('keydown', function (event) {
 			downArrowPressed = true;
 			break;
 	}
-});
+}
 
-window.addEventListener('keyup', function (event) {
-
+function onKeyUp(event) {
 	switch (event.key) {
 		case 'ArrowRight':
 			rightArrowPressed = false;
@@ -137,7 +157,6 @@ window.addEventListener('keyup', function (event) {
 			downArrowPressed = false;
 			break;
 	}
-});
+}
 
-
-//window.requestAnimationFrame(render);
+initialize();
