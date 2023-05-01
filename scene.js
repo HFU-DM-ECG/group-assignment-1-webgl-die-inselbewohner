@@ -9,6 +9,7 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2(0, 0);
 let previouslySelected = null;
 let prevTime = 0;
+let selectedMat = new THREE.MeshBasicMaterial();
 
 let rightArrowPressed = false;
 let leftArrowPressed = false;
@@ -114,11 +115,12 @@ function onPointerDown(event) {
 			selected = intersects[0].object.parent;
 		}
 		console.log(selected);
+		selectedMat = selected.material;
 		selected.material = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
 
 
 		if (previouslySelected != null) {
-			previouslySelected.material = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+			previouslySelected.material = selectedMat;
 		}
 
 		previouslySelected = selected;
