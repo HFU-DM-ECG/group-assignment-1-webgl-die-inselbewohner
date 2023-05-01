@@ -6,10 +6,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Group assignment 01 - WebGL demo</title>
     <style>
-        body { margin: 0; }
+        body { 
+            margin: 0; 
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        #info {
+            position: absolute;
+            color: white;
+            font-size: 20px;
+            left: 20px;
+        }
     </style>
+
 </head>
 <body>
 </body>
 <script src="./scene.js" type="module"></script>
+
+<div id="info">
+    <h2>Controls</h2>
+    <ul>
+        <li>select joint/bone with cursor</li>
+        <li>rotate joint with arrow keys</li>
+        <li>up/down - rotates along the x-Axis</li>
+        <li>left/right - rotates along the z-Axis</li>
+        <li>press Backspace to reset Arm</li>
+        <li>press Enter to wave</li>
+        <li>drag, mouse wheel, shift click - orbit controls</li>
+    </ul>
+</div>
 </html>

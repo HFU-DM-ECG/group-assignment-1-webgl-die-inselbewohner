@@ -19,5 +19,16 @@ The rating will be as follows:
 ## Hints
 In order to load a 3D model, [three.js](https://threejs.org) can be used. Follow the [installation instructions](https://threejs.org/docs/#manual/en/introduction/Installation) and create your own scene. Get inspired by the [examples](https://threejs.org/examples/), but come up with your own ideas and models. Use [some control method from three.js](https://threejs.org/examples/?q=controls) in order to make the scene explorable by the user. Note that the animation shall not be stored in the 3D model file, but needs to be defined by transformations in the WebGL JavaScript code. You can combine results and ideas from your individual assignment-shader project.
 
-# ToDo
-*Replace this readme with a proper readme for your project* 
+# Explanation
+## How to run
+- Run npm install in root folder
+- Run npx vite
+- click on the provided url
+
+## Code
+- Initializes a basic scene with camera, light and orbit controls. Then loads the arm 3D model and adds event listeners for user input.
+- Starts the update loop, updates the scene based on the current state and renders new frames
+- States:
+    - Manual: User can select joints by casting a ray through the scene on click which can then be rotated by using arrow keys
+    - Resetting: Resets rotation of all joints to 0
+    - Waving: Plays waving animation based on current time

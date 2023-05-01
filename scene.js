@@ -16,8 +16,22 @@ let leftArrowPressed = false;
 let upArrowPressed = false;
 let downArrowPressed = false;
 
+const rotationSpeed = 0.005;
+const waveSpeed = 0.003;
+
 const gltfLoader = new GLTFLoader();
 let arm;
+
+let waveNext = false;
+const STATE = Object.freeze({
+    MANUAL:   	Symbol("manual"),
+    RESETTING:  Symbol("resetting"),
+    WAVING: 	Symbol("waving")
+});
+
+let state = STATE.MANUAL;
+const resetSpeed = 0.005;
+let joints = [];
 
 
 function initialize() {
@@ -33,7 +47,7 @@ function initialize() {
 	//Light
 	const ambientLight = new THREE.AmbientLight(0x606060, 2);
 	scene.add(ambientLight);
-	
+
 	const pointLight = new THREE.PointLight(0x404040, 2, 50);
 	pointLight.position.setZ(3);
 	scene.add(pointLight);
@@ -44,10 +58,9 @@ function initialize() {
 	//Load arm
 	gltfLoader.load("arm.glb", (glb) => {
 		arm = glb.scene;
-		arm.scale.set(4, 4, 4);
+		arm.scale.set(7, 7, 7);
 		arm.position.set(0, 0, 0);
 		scene.add(arm);
-	
 		onInitialized();
 	});
 
@@ -58,6 +71,11 @@ function onInitialized() {
 	window.addEventListener('click', onPointerDown);
 	window.addEventListener('keydown', onKeyDown);
 	window.addEventListener('keyup', onKeyUp);
+
+	//Get joints
+	joints.push(scene.getObjectByName("Alpha_Joints001"));
+	joints.push(scene.getObjectByName("Alpha_Joints002"));
+	joints.push(scene.getObjectByName("Alpha_Joints003"));
 
 	//Start update
 	requestAnimationFrame(animate);
@@ -76,25 +94,90 @@ function animate(time) {
 }
 
 function update(time, deltaTime) {
-
-	if (previouslySelected == null) { return; }
-	if (previouslySelected.name == "Alpha_Joints") { return; }
-	
-	if (rightArrowPressed) {
-		previouslySelected.rotation.z -= deltaTime * 0.005;
-
-	} else if (leftArrowPressed) {
-		previouslySelected.rotation.z += deltaTime * 0.005;
-	}
-	else if (upArrowPressed) {
-		previouslySelected.rotation.x += deltaTime * 0.005;
-	}
-	else if (downArrowPressed) {
-		previouslySelected.rotation.x -= deltaTime * 0.005;
+	switch(state) {
+		case STATE.MANUAL:
+			updateManualControls(deltaTime);
+			break;
+		case STATE.RESETTING:
+			reset(deltaTime);
+			break;
+		case STATE.WAVING:
+			wave(time);
+			break;
 	}
 }
 
+//Rotate selected joint based on input
+function updateManualControls(deltaTime) {
+	if (previouslySelected == null) { return; }
+	const rotationAmount = deltaTime * rotationSpeed;
+	if (rightArrowPressed) {
+		previouslySelected.rotation.z -= rotationAmount;
 
+	} else if (leftArrowPressed) {
+		previouslySelected.rotation.z += rotationAmount;
+	}
+	else if (upArrowPressed) {
+		previouslySelected.rotation.x += rotationAmount;
+	}
+	else if (downArrowPressed) {
+		previouslySelected.rotation.x -= rotationAmount;
+	}
+}
+
+//Reset rotation of all joints to 0
+function reset(deltaTime) {
+	const rotationAmount = resetSpeed * deltaTime;
+	let allReset = true;
+	joints.forEach((joint) => {
+		joint.rotation.x = Math.max((joint.rotation.x -rotationAmount), 0);
+		joint.rotation.z = Math.max((joint.rotation.z -rotationAmount), 0);
+
+		if (joint.rotation.x != 0 || joint.rotation.z != 0) {
+			allReset = false;
+		}
+	});
+	
+	if (allReset) {
+		if (waveNext) {
+			state = STATE.WAVING;
+			waveNext = false;
+		} else {
+			state = state.MANUAL;
+		}
+	}
+}
+
+//Rotate elbow and hand
+function wave(time) {
+	joints[1].rotation.z = 0.8 * Math.sin(waveSpeed * time) + Math.PI * 0.5;
+	joints[2].rotation.z = 0.4 * Math.sin(waveSpeed * time);
+	
+}
+
+function toggleWave() {
+	state = state == STATE.WAVING ? STATE.MANUAL : STATE.WAVING;
+}
+
+//Setup for reseting the rotation of the joints
+function startReset() {
+	joints.forEach((joint) => {
+		joint.rotation.x = joint.rotation.x % (Math.PI * 2);
+		joint.rotation.z = joint.rotation.z % (Math.PI * 2);
+
+		if(joint.rotation.x < 0) {
+			joint.rotation.x = (Math.PI * 2) + joint.rotation.x;
+		}
+
+		if(joint.rotation.z < 0) {
+			joint.rotation.z = (Math.PI * 2) + joint.rotation.z;
+		}
+	});
+
+	state = STATE.RESETTING;
+}
+
+//Selects joint if clicked
 function onPointerDown(event) {
 
 	// calculate pointer position in normalized device coordinates
@@ -111,10 +194,12 @@ function onPointerDown(event) {
 
 	if (intersects.length != 0) {
 		let selected = intersects[0].object;
+		//Ignore fingers
+		if (selected.name == "Alpha_Joints" || selected.name == "Alpha_Surface") { return; }
 		if (!selected.name.includes("Joint")) {
 			selected = intersects[0].object.parent;
 		}
-		console.log(selected);
+
 		selectedMat = selected.material;
 		selected.material = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
 
@@ -128,7 +213,7 @@ function onPointerDown(event) {
 }
 
 function onKeyDown(event) {
-	switch (event.key) {
+	switch (event.code) {
 		case 'ArrowRight':
 			rightArrowPressed = true;
 			break;
@@ -141,18 +226,24 @@ function onKeyDown(event) {
 		case 'ArrowDown':
 			downArrowPressed = true;
 			break;
+		case 'Backspace':
+			startReset();
+			break;
+		case 'Enter':
+			toggleWave();
+			break;
 	}
 }
 
 function onKeyUp(event) {
-	switch (event.key) {
+	switch (event.code) {
 		case 'ArrowRight':
 			rightArrowPressed = false;
 			break;
 		case 'ArrowLeft':
 			leftArrowPressed = false;
 			break;
-        case 'ArrowUp':
+		case 'ArrowUp':
 			upArrowPressed = false;
 			break;
 		case 'ArrowDown':
